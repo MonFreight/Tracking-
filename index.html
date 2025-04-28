@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Parcel Tracking System with Admin Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        input, select {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #1a505b;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1a505b;
+        }
+        .section {
+            margin-top: 40px;
+        }
+        .result, .adminResult, .loginResult {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .result {
+            color: #333;
+        }
+        .adminResult {
+            color: green;
+        }
+        .loginResult {
+            color: red;
+        }
+        .hidden {
+            display: none;
+        }
+
+        /* Progress bar styles */
+        .progress-container {
+            margin-top: 40px;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        .progress-bar-background {
+            width: 100%;
+            height: 20px; /* Wider track */
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 20px; /* Match the background height */
+            background-color: #1a505b; /* Dark teal fill */
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        .progress-marker {
+            width: 30px;
+            height: 30px;
+            background-color: #1a505b;
+            border-radius: 50%;
+            position: absolute;
+            top: -5px;
+            left: 0;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px; /* Bigger plane */
+            transition: left 0.5s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>📦 Mon Freight Tracking System</h1>
+
+    <!-- Customer Tracking Section -->
+    <div class="section" id="trackingSection">
+        <h2>Track Your Parcel</h2>
+        <form id="trackingForm">
+            <input type="text" id="trackingNumber" placeholder="Enter Tracking Number" required>
+            <button type="submit">Track</button>
+        </form>
+        <div id="result" class="result"></div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressBar" style="display:none;">
+            <div class="progress-header">
+                <div>Collection<br><b>Brisbane, BNE</b></div>
+                <div>Landed<br><b>Ulaanbaatar, Mongolia</b></div>
+            </div>
+            <div class="progress-bar-background">
+                <div class="progress-bar-fill" id="progressFill"></div>
+                <div class="progress-marker" id="progressMarker">✈️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Section -->
+    <div class="section" id="adminLoginSection">
+        <h2>🔒 Admin Login</h2>
+        <form id="loginForm">
+            <input type="text" id="adminUsername" placeholder="Username" required>
+            <input type="password" id="adminPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div id="loginResult" class="loginResult"></div>
+    </div>
+
+    <!-- Admin Panel Section -->
+    <div class="section hidden" id="adminPanelSection">
+        <h2>🛠️ Admin - login</h2>
+        <form id="adminForm">
+            <input type="text" id="newTrackingNumber" placeholder="New Tracking Number" required>
+            <select id="newStatus" required>
+                <option value="">Select Status</option>
+                <option value="Collection in BNE">Collection in BNE</option>
+                <option value="In Transit">In Transit</option>
+                <option value="Ulaanbaatar, Mongolia">Ulaanbaatar, Mongolia</option>
+            </select>
+            <button type="submit">Add Parcel</button>
+        </form>
+        <div id="adminResult" class="adminResult"></div>
+    </div>
+
+</div>
+
+<script>
+    const trackingData = {};
+
+    // Load saved tracking data from LocalStorage
+    const savedData = JSON.parse(localStorage.getItem('trackingData'));
+    if (savedData) {
+        Object.assign(trackingData, savedData);
+    }
+
+    // Handle customer tracking
+    document.getElementById('trackingForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const trackingNumber = document.getElementById('trackingNumber').value.trim().toUpperCase();
+        const resultDiv = document.getElementById('result');
+        const progressBar = document.getElementById('progressBar');
+        const marker = document.getElementById('progressMarker');
+        const fill = document.getElementById('progressFill');
+
+        if (trackingData[trackingNumber]) {
+            const status = trackingData[trackingNumber];
+            resultDiv.textContent = `✅ Status: ${status}`;
+            progressBar.style.display = 'block';
+
+            if (status === "Collection in BNE") {
+                marker.style.left = '2%';
+                fill.style.width = '0%';
+            } else if (status === "In Transit") {
+                marker.style.left = '50%';
+                fill.style.width = '50%';
+            } else if (status === "Ulaanbaatar, Mongolia") {
+                marker.style.left = '98%';
+                fill.style.width = '98%';
+            } else {
+                marker.style.left = '0%';
+                fill.style.width = '0%';
+            }
+        } else {
+            resultDiv.textContent = "❌ Tracking Number not found. Please check again.";
+            progressBar.style.display = 'none';
+        }
+    });
+
+    // Handle admin login
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const username = document.getElementById('adminUsername').value.trim();
+        const password = document.getElementById('adminPassword').value.trim();
+        const loginResultDiv = document.getElementById('loginResult');
+
+        if (username === "Mon Freight" && password === "M0nFreight") {
+            document.getElementById('adminLoginSection').classList.add('hidden');
+            document.getElementById('adminPanelSection').classList.remove('hidden');
+        } else {
+            loginResultDiv.textContent = "Incorrect username or password.";
+        }
+    });
+
+    // Handle Admin adding new parcel
+    document.getElementById('adminForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const newTrackingNumber = document.getElementById('newTrackingNumber').value.trim().toUpperCase();
+        const newStatus = document.getElementById('newStatus').value;
+        const adminResultDiv = document.getElementById('adminResult');
+
+        if (newTrackingNumber && newStatus) {
+            trackingData[newTrackingNumber] = newStatus;
+            localStorage.setItem('trackingData', JSON.stringify(trackingData));
+            adminResultDiv.textContent = `✅ Successfully added: ${newTrackingNumber} (${newStatus})`;
+            document.getElementById('adminForm').reset();
+        } else {
+            adminResultDiv.textContent = "❌ Please fill in both fields.";
+        }
+    });
+</script>
+
+</body>
+</html>
